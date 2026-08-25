@@ -39,7 +39,7 @@ export const multipleTools = async () => {
   //  tools call nikalo
 
   const toolsCall = result.tool_calls[0];
- 
+
   // tools execute karo
   const toolResult = await calculate.invoke(toolsCall.args);
   console.log("result", toolResult);
