@@ -6,9 +6,12 @@ import { ToolMessage } from "@langchain/core/messages";
 const add = ({ a, b }) => {
   return a + b;
 };
-const multiply = ({a,b}) =>{
-    return a * b 
-}
+const multiply = ({ a, b }) => {
+  return a * b;
+};
+const substract = ({ a, b }) => {
+  return a - b;
+};
 const calculate = tool(add, {
   name: "calculate",
   description: "use this tool when add two number",
@@ -18,36 +21,54 @@ const calculate = tool(add, {
   }),
 });
 const multiCalculate = tool(multiply, {
-    name: "multiple",
-    description: "use this tools when multiple two number",
-    schema: z.object({
-        a: z.number().describe("first number"),
-        b:z.number().describe("second number")
-    })
-})
+  name: "multiple",
+  description: "use this tools when multiple two number",
+  schema: z.object({
+    a: z.number().describe("first number"),
+    b: z.number().describe("second number"),
+  }),
+});
 
+const substraction = tool(substract, {
+  name: "substraction",
+  description: "use this tools when substract two number",
+  schema: z.object({
+    a: z.number().describe("a number"),
+    b: z.number().describe("b number"),
+  }),
+});
 export const multipleTools = async () => {
   const model = generateContentAI();
-  const question = "what is 20 + 40";
+  const question = "what is 20 * 40";
 
   //   here llm provide tools
-  const modelWithTools = model.bindTools([calculate, multiCalculate]);
+  const modelWithTools = model.bindTools([
+    calculate,
+    multiCalculate,
+    substraction,
+  ]);
 
   const result = await modelWithTools.invoke(question);
-  console.log("tools call", result);
 
   //  tools call nikalo
+  const tools = {
+    calculate,
+    multiple: multiCalculate,
+    substraction,
+  };
 
   const toolsCall = result.tool_calls[0];
- 
+
+  const selectedTools = tools[toolsCall.name];
   // tools execute karo
-  const toolResult = await calculate.invoke(toolsCall.args);
+  const toolResult = await selectedTools.invoke(toolsCall.args);
+  console.log("tools Result", toolResult);
   console.log("result", toolResult);
 
   //   tool message
   const toolMessage = new ToolMessage({
     content: String(toolResult),
-    tool_call_id: toolsCall.id
+    tool_call_id: toolsCall.id,
   });
 
   const message = [
