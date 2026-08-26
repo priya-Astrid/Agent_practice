@@ -1,4 +1,4 @@
-// phase -1 = learning how to create a agent 
+// phase-2 =>lession 2.1 => Agent ko instrction dena(system prompt)// phase -1 = learning how to create a agent
 
 import { createAgent, tool } from "langchain";
 import z from "zod";
@@ -46,12 +46,20 @@ export const simpleCalculateAgent = async () => {
   const Agent = createAgent({
     model,
     tools: [calculate, multiplication, subtraction],
+    systemPrompt: `
+        you are a calculator agent.
+        Rules: 
+        1. Always use the provided tools for calculations.
+        2. Never calculate arithmetic directly.
+        3. use the appropiate tool.
+        4. give a clear final answer.
+    `,
   });
   const result = await Agent.invoke({
     messages: [{ role: "user", content: "what is 2*40" }],
   });
 
   const finalAnswer = result.messages.at(-1);
-   console.log(finalAnswer.content);
+  console.log(finalAnswer.content);
 };
 simpleCalculateAgent();
