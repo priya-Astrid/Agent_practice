@@ -1,6 +1,6 @@
 import { createAgent, tool } from "langchain";
 import z from "zod";
-import { generateContentAI } from "../config/generateAi.js";
+import { generateContentAI } from "../../config/generateAi.js";
 
 const add = ({ a, b }) => {
   return a + b;
