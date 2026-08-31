@@ -1,6 +1,8 @@
 import { createAgent, tool } from "langchain";
 import z from "zod";
-import { generateContentAI } from "../config/generateAi.js";
+import { generateContentAI } from "../../config/generateAi.js";
+import { MemorySaver } from "@langchain/langgraph-checkpoint";
+
 import readlineSync from "readline-sync";
 const add = ({ a, b }) => {
   return a + b;
@@ -11,7 +13,7 @@ const multiply = ({ a, b }) => {
 const subtract = ({ a, b }) => {
   return a - b;
 };
-// ye single-user in-memory conversation history hia 
+
 const addition = tool(add, {
   name: "addition",
   description: "use this tools to add to number",
@@ -38,38 +40,44 @@ const subtraction = tool(subtract, {
     b: z.number().describe("second number"),
   }),
 });
-
-const HistoryMessage = [];
-const chatWithUser = async (question) => {
-  HistoryMessage.push({
-    role: "user",
-    content: question,
-  });
-  const model = generateContentAI();
-  const Agent = createAgent({
-    model,
-    tools: [addition, subtraction, multiplication],
-    systemPrompt: `
-     you are a calculator agent. 
-     Always use provided tools for Arithmetic calculations.
-    `,
-  });
-  const finalResponse = await Agent.invoke({ messages: HistoryMessage });
-  HistoryMessage.length = 0;
-  HistoryMessage.push(...finalResponse.messages);
-
-  const final = finalResponse.messages.at(-1);
-  console.log("finally", final.content);
+const model = generateContentAI();
+const checkpointer = new MemorySaver();
+const Agent = createAgent({
+  model,
+  tools: [addition, subtraction, multiplication],
+  systemPrompt: `
+    you are a calculator agent.
+     always use provided tools for arithmetic calculation`,
+  checkpointer,
+});
+const simpleChat = async (question) => {
+  const result = await Agent.invoke(
+    {
+      messages: [
+        {
+          role: "user",
+          content: question,
+        },
+      ],
+    },
+    {
+      configurable: {
+        thread_id: "chat_01",
+      },
+    },
+  );
+  const finalAnswer = result.messages.at(-1);
+  console.log("response : ", finalAnswer.content);
 };
 
-export const userQuestion = async () => {
+export const simpleMemory = async () => {
   while (true) {
     const question = readlineSync.question("ask question....");
     if (question.toLowerCase() === "exit") {
       console.log("chat ended...");
       break;
     }
-    await chatWithUser(question);
+    await simpleChat(question);
   }
 };
-userQuestion();
+simpleMemory();

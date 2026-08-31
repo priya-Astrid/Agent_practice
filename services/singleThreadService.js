@@ -1,7 +1,7 @@
+import { MemorySaver } from "@langchain/langgraph-checkpoint";
+import { generateContentAI } from "../config/generateAi.js";
 import { createAgent, tool } from "langchain";
 import z from "zod";
-import { generateContentAI } from "../config/generateAi.js";
-import { MemorySaver } from "@langchain/langgraph";
 
 const add = ({ a, b }) => {
   return a + b;
@@ -39,37 +39,36 @@ const subtraction = tool(subtract, {
     b: z.number().describe("second number"),
   }),
 });
+ const model = generateContentAI();
+  const checkpointer = new MemorySaver();
 
-const simpleMemory = async () => {
-  try {
-    const model = generateContentAI();
-   const checkpointer = new MemorySaver();
-     const Agent = createAgent({
-      model,
-      tools: [addition, subtraction, multiplication],
-      systemPrompt: `
-            you are a calculator Agent.
-            always use the provided tool for arithmetic calculations.  
-            `,
+  const Agent = createAgent({
+    model,
+    tools: [addition, multiplication, subtraction],
+    systemPrompt: `always use provided tools for arthimetic calculation`,
+    checkpointer,
+  });
+export const singlechatService = async (question, threadId) => {
+ 
 
-      checkpointer,
-    });
-
-    const result = await Agent.invoke(
-      {
-        messages: [{ role: "user", content: "what is 10+30" }],
-      },
-      {
-        configurable: {
-          thread_id: "chat-1",
+  const result = await Agent.invoke(
+    {
+      messages: [
+        {
+          role: "user",
+          content: question,
         },
+      ],
+    },
+    {
+      configurable: {
+        thread_id: threadId,
       },
-    );
-    const finalAnswer = result.messages.at(-1);
-    console.log("final answer", finalAnswer.content);
-    // memory concept
-  } catch (error) {
-  console.error("error message:", error);
-  }
+    },
+  );
+  const finalResponse = result.messages.at(-1);
+  const data = finalResponse.content;
+  console.log("reposnse", data);
+
+  return data;
 };
-simpleMemory();

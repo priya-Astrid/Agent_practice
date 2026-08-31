@@ -1,6 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import z from "zod";
-import { generateContentAI } from "../config/generateAi.js";
+import { generateContentAI } from "../../config/generateAi.js";
 import { ToolMessage } from "@langchain/core/messages";
 
 // function create
