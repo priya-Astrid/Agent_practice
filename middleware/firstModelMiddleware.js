@@ -16,11 +16,13 @@ const addition = tool(add, {
 
 const logginMiddleware = createMiddleware({
   name: "logginMiddleware",
-  beforeMiddleware: async (state) => {
+  // before model call  tool
+  beforeModel: async (state) => {
     console.log("middleware before state: ", state);
     return;
   },
-  afterMiddleware: async (state) => {
+  // after model  call tool
+  afterModel: async (state) => {
     console.log("middleware after state", state);
     return;
   },
@@ -31,22 +33,20 @@ const Agent = createAgent({
   model,
   tools: [addition],
   systemPrompt: `you are  a calculator agent. always use tools for arthimetic operations`,
-  middlewares: [logginMiddleware],
+  middleware: [logginMiddleware],
 });
 
-export const firstMiddleware = async () => {
-    
-const result = await Agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content: "what is 2+3",
-    },
-  ],
-});
-const finalAnswer = result.messages.at(-1);
-const data = finalAnswer.content;
-console.log("final Answer", data);
-
+export const firstModelMiddleware = async () => {
+  const result = await Agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content: "what is 20+30",
+      },
+    ],
+  });
+  const finalAnswer = result.messages.at(-1);
+  const data = finalAnswer.content;
+  console.log("final Answer", data);
 };
-firstMiddleware();
+firstModelMiddleware();
